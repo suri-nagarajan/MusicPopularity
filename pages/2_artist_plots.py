@@ -37,7 +37,7 @@ else:
 # Plot
 plt.figure(figsize=(10, 6))
 sns.histplot(filtered_data['popularity'], bins=10, kde=True)
-plt.title(f'Popularity Distribution for Selected Genres')
+plt.title(f'Popularity Distribution for Selected Artist')
 plt.xlabel('Popularity')
 plt.ylabel('Frequency')
 st.pyplot(plt)

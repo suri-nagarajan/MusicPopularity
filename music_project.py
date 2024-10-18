@@ -31,7 +31,7 @@ df = pd.read_csv("dataset-hugging-face.csv")
 # Plot
 plt.figure(figsize=(10, 6))
 sns.histplot(df['popularity'], bins=10, kde=True)
-plt.title(f'Popularity Distribution for Selected Genres')
+plt.title(f'Popularity Distribution for all songs')
 plt.xlabel('Popularity')
 plt.ylabel('Frequency')
 st.pyplot(plt)
