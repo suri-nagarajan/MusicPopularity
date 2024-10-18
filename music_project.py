@@ -2,6 +2,7 @@ import pandas as pd
 import streamlit as st
 import seaborn as sns
 import matplotlib.pyplot as plt
+import plotly.express as px
  
 # Streamlit app
 st.title('Song Popularity analysis using song features')
@@ -50,6 +51,30 @@ plt.xlabel('Key')
 plt.ylabel('Popularity')
 st.pyplot(plt)
 
+# Plotly distribution plot
+fig = px.violin(df, x='key', y='popularity', color='key', title='Popularity Distribution by Key', box=True, points='all')
+# Display the plot
+st.plotly_chart(fig)
+
+# Count the number of songs per key
+key_count = df['key'].value_counts().reset_index()
+key_count.columns = ['key', 'count']
+
+# Plotly horizontal bar chart
+fig = px.bar(key_count, x='count', y='key', orientation='h', title='Number of Songs by Key',color_discrete_sequence=['#ADD8E6'])
+fig.update_layout(xaxis_title='Number of Songs', yaxis_title='Key')
+
+# Display the plot
+st.plotly_chart(fig)
+
+# Display the plot
+
+# Plotly box plot
+#fig = px.box(df, x='key', y='popularity', title='Popularity vs Key', points='all')
+
+# Display the plot
+#st.plotly_chart(fig)
+
 # Scatter plot of popularity vs tempo
 plt.figure(figsize=(10, 6))
 sns.scatterplot(data=df, x='tempo', y='popularity')
@@ -57,6 +82,12 @@ plt.title('Popularity vs Tempo')
 plt.xlabel('Tempo (BPM)')
 plt.ylabel('Popularity')
 st.pyplot(plt)
+
+# Plotly scatter plot
+fig = px.scatter(df, x='tempo', y='popularity', title='Popularity vs Tempo', hover_data=['tempo', 'popularity'])
+
+# Display the plot
+st.plotly_chart(fig)
 
 
 st.write('Song features Data:', df)

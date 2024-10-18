@@ -2,6 +2,7 @@ import pandas as pd
 import streamlit as st
 import seaborn as sns
 import matplotlib.pyplot as plt
+import plotly.express as px
  
 # Streamlit app
 st.title('Popularity Distribution by Genre')
@@ -49,6 +50,22 @@ plt.title('Popularity vs Key')
 plt.xlabel('Key')
 plt.ylabel('Popularity')
 st.pyplot(plt)
+
+# Plotly distribution plot
+fig = px.violin(filtered_data, x='key', y='popularity', color='key', title='Popularity Distribution by Key', box=True, points='all')
+# Display the plot
+st.plotly_chart(fig)
+
+# Count the number of songs per key
+key_count = filtered_data['key'].value_counts().reset_index()
+key_count.columns = ['key', 'count']
+
+# Plotly horizontal bar chart
+fig = px.bar(key_count, x='count', y='key', orientation='h', title='Number of Songs by Key',color_discrete_sequence=['#ADD8E6'])
+fig.update_layout(xaxis_title='Number of Songs', yaxis_title='Key')
+
+# Display the plot
+st.plotly_chart(fig)
 
 # Scatter plot of popularity vs tempo
 plt.figure(figsize=(10, 6))
