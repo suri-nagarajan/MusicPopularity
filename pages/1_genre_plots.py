@@ -9,6 +9,12 @@ st.title('Popularity Distribution by Genre')
 #read data
 df = pd.read_csv("dataset-hugging-face.csv")
 
+# Define the mapping
+key_mapping = {0: "C", 1: "C#", 2: "D", 3: "D#", 4: "E", 5: "F", 6: "F#", 7: "G", 8: "G#", 9: "A", 10: "A#", 11: "B"}
+
+# Apply the mapping to create 'key_factor'
+df['key'] = df['key'].map(key_mapping)
+
 # Dropdown for genre selection
 genres = df['track_genre'].unique()
 #selected_genre = st.selectbox('Select a genre:', genres)
