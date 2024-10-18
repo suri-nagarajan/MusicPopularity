@@ -16,6 +16,13 @@ key_mapping = {0: "C", 1: "C#", 2: "D", 3: "D#", 4: "E", 5: "F", 6: "F#", 7: "G"
 # Apply the mapping to create 'key_factor'
 df['key'] = df['key'].map(key_mapping)
 
+# Compute descriptive statistics
+stats = df.describe().drop('count')
+stats = stats.drop(columns=[stats.columns[0]])
+# Display in Streamlit
+st.text("Descriptive Statistics of Song Features (Total Records: " + str("{:,}".format(len(df))) + ")")
+st.table(stats)
+
 # Dropdown for genre selection
 #-->genres = df['track_genre'].unique()
 #selected_genre = st.selectbox('Select a genre:', genres)
