@@ -10,15 +10,18 @@ import altair as alt
 st.title('Song Popularity analysis using song features')
 
 #read data
-df = pd.read_csv("dataset-hugging-face.csv")
-df = df.drop(columns=[df.columns[0]])
+@st.cache_data
+def fetch_and_clean_data():
+    df_music = pd.read_csv("dataset-hugging-face.csv")
+    df_music = df_music.drop(columns=[df_music.columns[0]])
+    # Define the mapping
+    key_mapping = {0: "C", 1: "C#", 2: "D", 3: "D#", 4: "E", 5: "F", 6: "F#", 7: "G", 8: "G#", 9: "A", 10: "A#", 11: "B"}
+    # Apply the mapping to create 'key_factor'
+    df_music['key'] = df_music['key'].map(key_mapping)
+    #df['key'] = pd.Categorical(df['key'], categories=["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"], ordered=True)
+    return df_music
 
-# Define the mapping
-key_mapping = {0: "C", 1: "C#", 2: "D", 3: "D#", 4: "E", 5: "F", 6: "F#", 7: "G", 8: "G#", 9: "A", 10: "A#", 11: "B"}
-
-# Apply the mapping to create 'key_factor'
-df['key'] = df['key'].map(key_mapping)
-
+df = fetch_and_clean_data()
 # Compute descriptive statistics
 stats = df.describe().drop('count')
 #stats = stats.drop(columns=[stats.columns[0]])
@@ -95,24 +98,30 @@ st.plotly_chart(fig)
 # Display the plot
 #st.plotly_chart(fig)
 
-# Scatter plot of popularity vs tempo
-plt.figure(figsize=(10, 6))
-sns.scatterplot(data=df, x='tempo', y='popularity')
-plt.title('Popularity vs Tempo')
-plt.xlabel('Tempo (BPM)')
-plt.ylabel('Popularity')
-st.pyplot(plt)
+#-------------------------------------------------------------#
+## Scatter plot of popularity vs tempo
+#plt.figure(figsize=(10, 6))
+#sns.scatterplot(data=df, x='tempo', y='popularity')
+#plt.title('Popularity vs Tempo')
+#plt.xlabel('Tempo (BPM)')
+#plt.ylabel('Popularity')
+#st.pyplot(plt)
+#-------------------------------------------------------------#
 
-# Plotly scatter plot
-fig = px.scatter(df, x='tempo', y='popularity', title='Popularity vs Tempo', hover_data=['tempo', 'popularity'])
 
-# Display the plot
-st.plotly_chart(fig)
+#-------------------------------------------------------------#
+## Plotly scatter plot
+#fig = px.scatter(df, x='tempo', y='popularity', title='Popularity vs Tempo', hover_data=['tempo', 'popularity'])
+## Display the plot
+#st.plotly_chart(fig)
+#-------------------------------------------------------------#
 
-# make the chart
-c1 = (alt.Chart(df).mark_point().encode(x='tempo',y='popularity',color='key',).interactive())
-st.altair_chart(c1, use_container_width=True)
 
+#-------------------------------------------------------------#
+## make the chart
+#c1 = (alt.Chart(df).mark_point().encode(x='tempo',y='popularity',color='key',).interactive())
+#st.altair_chart(c1, use_container_width=True)
+#-------------------------------------------------------------#
 
 st.write('Song features Data:', df)
 
