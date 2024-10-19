@@ -3,6 +3,8 @@ import streamlit as st
 import seaborn as sns
 import matplotlib.pyplot as plt
 import plotly.express as px
+#import chartify
+import altair as alt
  
 # Streamlit app
 st.title('Song Popularity analysis using song features')
@@ -58,6 +60,16 @@ plt.xlabel('Key')
 plt.ylabel('Popularity')
 st.pyplot(plt)
 
+#-------------------------------------------------------------------------------------------#
+#ch = chartify.Chart(x_axis_type="categorical")
+#ch.plot.boxplot(
+#data_frame=df,categorical_columns=["key"],numeric_column="popularity",color_column="key",)
+#ch.set_title("Distribution of Popularity by Key")
+#ch.axes.set_xaxis_label("Key")
+#ch.axes.set_yaxis_label("Popularity")
+#ch.show()
+#-------------------------------------------------------------------------------------------#
+
 # Plotly distribution plot
 fig = px.violin(df, x='key', y='popularity', color='key', title='Popularity Distribution by Key', box=True, points='all')
 # Display the plot
@@ -95,6 +107,10 @@ fig = px.scatter(df, x='tempo', y='popularity', title='Popularity vs Tempo', hov
 
 # Display the plot
 st.plotly_chart(fig)
+
+# make the chart
+c1 = (alt.Chart(df).mark_point().encode(x='tempo',y='popularity',color='key',).interactive())
+st.altair_chart(c1, use_container_width=True)
 
 
 st.write('Song features Data:', df)
