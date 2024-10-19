@@ -11,6 +11,7 @@ st.title('Song Popularity analysis using song features')
 
 #read data
 df = pd.read_csv("dataset-hugging-face.csv")
+df = df.drop(columns=[df.columns[0]])
 
 # Define the mapping
 key_mapping = {0: "C", 1: "C#", 2: "D", 3: "D#", 4: "E", 5: "F", 6: "F#", 7: "G", 8: "G#", 9: "A", 10: "A#", 11: "B"}
@@ -20,7 +21,7 @@ df['key'] = df['key'].map(key_mapping)
 
 # Compute descriptive statistics
 stats = df.describe().drop('count')
-stats = stats.drop(columns=[stats.columns[0]])
+#stats = stats.drop(columns=[stats.columns[0]])
 # Display in Streamlit
 st.text("Descriptive Statistics of Song Features (Total Records: " + str("{:,}".format(len(df))) + ")")
 st.table(stats)
@@ -115,7 +116,26 @@ st.altair_chart(c1, use_container_width=True)
 
 st.write('Song features Data:', df)
 
+# Drop text columns
+df = df.select_dtypes(include=[int, float])
 
+st.header('Feature Correlation:')
+# Calculate the correlation matrix
+correlation_matrix = df.corr()
+st.table(correlation_matrix)
+
+st.header('Correlation matrix heat map:')
+# Calculate the correlation matrix
+correlation_matrix = df.corr().stack().reset_index()
+correlation_matrix.columns = ['Feature1', 'Feature2', 'Correlation']
+
+# Plotly correlation heatmap
+fig = px.density_heatmap(correlation_matrix, x='Feature1', y='Feature2', z='Correlation', color_continuous_scale='RdBu_r', title='Correlation Matrix',
+ width=800,height=800)
+fig.update_layout(xaxis_title='Features', yaxis_title='Features')
+
+# Display the plot
+st.plotly_chart(fig)
 
 
 
