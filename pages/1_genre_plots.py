@@ -10,10 +10,10 @@ st.title('Popularity Distribution by Genre')
 #read data
 df = pd.read_csv("dataset-hugging-face.csv")
 
-# Define the mapping
+# Define the mapping fro key
 key_mapping = {0: "C", 1: "C#", 2: "D", 3: "D#", 4: "E", 5: "F", 6: "F#", 7: "G", 8: "G#", 9: "A", 10: "A#", 11: "B"}
 
-# Apply the mapping to create 'key_factor'
+# Apply the mapping to create 'key' column of music data
 df['key'] = df['key'].map(key_mapping)
 
 # Dropdown for genre selection
@@ -21,19 +21,44 @@ genres = df['track_genre'].unique()
 #selected_genre = st.selectbox('Select a genre:', genres)
 selected_genres = st.multiselect('Select genres:', genres, default=genres)
 
-# Multi-select for artist selection
-#artists = df['artists'].unique()
-#selected_artists = st.multiselect('Select artists:', artists, default=artists)
+
+
+# Sidebar filters
+st.sidebar.title('Filter Criteria')
+#Slider for popularity, energy, dancability selection.
+popularity_range = st.sidebar.slider("Select Popularity range:", 0.0, 100.0, (0.0, 100.0))
+energy_range = st.sidebar.slider("Select Energy Range:", 0.0, 1.0, (0.0, 1.0))
+danceability_range = st.sidebar.slider("Select Danceability Range:", 0.0, 1.0, (0.0, 1.0))
+
+
+# Add a multi-select for keys
+# Ensure key_name is ordered correctly
+#df['key_name'] = pd.Categorical(df['key'], categories=["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"], ordered=True)
+keys = df['key'].unique()
+
+#Filter for key and mode(major /minor key)
+selected_keys = st.sidebar.multiselect('Select keys:', keys, default=keys)
+# Multi-select buttons for mode
+mode_mapping = {0: "Minor", 1: "Major"}
+modes = st.sidebar.multiselect('Select Mode:', options=list(mode_mapping.values()), default=list(mode_mapping.values()))
 
 
 #st.dataframe(df)
 #st.line_chart(df)
 
-# Filter data by selected genre
-#filtered_data = df[df['track_genre'] == selected_genre]
-#filtered_data = df[df['track_genre'].isin(selected_genres)]
-filtered_data = df[(df['track_genre'].isin(selected_genres))] 
-                   #& (df['artists'].isin(selected_artists))]
+# Filter data by selected genre, Popularity,Key, mode(major/minor keys) energy, dancability
+filtered_data = df[(df['track_genre'].isin(selected_genres)) 
+                   # Filter the data based on the slider value
+                    & (df['popularity'] >= popularity_range[0]) 
+                    & (df['popularity'] <= popularity_range[1])
+                    & (df['key'].isin(selected_keys))
+                    & (df['energy'] >= energy_range[0]) 
+                    & (df['energy'] <= energy_range[1]) 
+                    & (df['danceability'] >= danceability_range[0]) 
+                    & (df['danceability'] <= danceability_range[1])
+                    & (df['mode'].map(mode_mapping).isin(modes))
+                   ]
+
 
 # Plot
 plt.figure(figsize=(10, 6))
