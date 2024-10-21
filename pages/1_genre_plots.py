@@ -70,10 +70,24 @@ st.pyplot(plt)
 
 # Box plot of popularity vs key
 plt.figure(figsize=(10, 6))
-sns.boxplot(data=filtered_data, x='key', y='popularity')
+palette = sns.color_palette("husl", len(key_mapping))
+sns.boxplot(data=filtered_data, x='key', y='popularity', order=["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"],palette=palette)
 plt.title('Popularity vs Key')
 plt.xlabel('Key')
 plt.ylabel('Popularity')
+st.pyplot(plt)
+    
+# Create a violin plot
+plt.figure(figsize=(10, 6))
+palette = sns.color_palette("husl", len(key_mapping))
+sns.violinplot(x='key', y='popularity', data=filtered_data, order=["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"],palette=palette)
+#
+# Add labels and title
+plt.xlabel('Key')
+plt.ylabel('Popularity')
+plt.title('Popularity Distribution by Key')
+#
+# Display the plot
 st.pyplot(plt)
 
 #--------------------------------------------------------#
