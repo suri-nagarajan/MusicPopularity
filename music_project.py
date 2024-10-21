@@ -3,6 +3,7 @@ import streamlit as st
 import seaborn as sns
 import matplotlib.pyplot as plt
 import plotly.express as px
+import plotly.graph_objects as go
 #import chartify
 import altair as alt
 
@@ -102,7 +103,32 @@ if 1 == 1:
     plt.xlabel('Key')
     plt.ylabel('Popularity')
     st.pyplot(plt)
-
+    
+    #Plot histogram of all song features
+    def create_hostogram_plot(hist_list = []):
+        # Create histograms
+        fig = go.Figure()
+        for col in histogram_list:
+            fig.add_trace(go.Histogram(x=df[col], name=col, opacity=0.75))
+        # Update layout
+        fig.update_layout(
+            title='Histogram of Features (Choose feature you want to see by clicking on the legend)',
+            barmode='overlay',
+            xaxis_title='Value',
+            yaxis_title='Count'
+        )
+        # Display the plot
+        st.plotly_chart(fig)
+    #
+    #
+    histogram_list = ["danceability","energy","loudness","mode","speechiness","acousticness","instrumentalness","liveness","valence","tempo","time_signature"]
+    #histogram_list = ["danceability","energy"]
+    create_hostogram_plot(histogram_list)
+    #histogram_list = ["speechiness","instrumentalness"]
+    #create_hostogram_plot(histogram_list)
+    #histogram_list = ["loudness","acousticness","liveness","valence","tempo"]
+    #create_hostogram_plot(histogram_list)
+    
     #-------------------------------------------------------------------------------------------#
     #ch = chartify.Chart(x_axis_type="categorical")
     #ch.plot.boxplot(
@@ -164,7 +190,7 @@ if 1 == 1:
     #st.altair_chart(c1, use_container_width=True)
     #-------------------------------------------------------------#
 
-    #st.write('Song features Data:', filtered_data)
+    st.write('Song features Data:', filtered_data)
 
     # Drop text columns
     filtered_data = filtered_data.select_dtypes(include=[int, float])
