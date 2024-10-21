@@ -121,7 +121,7 @@ plt.ylabel('Popularity')
 st.pyplot(plt)
 
 
-#st.write('Filtered Data:', filtered_data)
+st.write('Filtered Data:', filtered_data)
 
 
 
