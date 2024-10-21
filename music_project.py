@@ -105,14 +105,14 @@ if 1 == 1:
     st.pyplot(plt)
     
     #Plot histogram of all song features
-    def create_hostogram_plot(hist_list = []):
+    def create_hostogram_plot(hist_list = [], title ="Histogram of Features (Choose feature you want to see by clicking on the legend)"):
         # Create histograms
         fig = go.Figure()
         for col in histogram_list:
             fig.add_trace(go.Histogram(x=df[col], name=col, opacity=0.75))
         # Update layout
         fig.update_layout(
-            title='Histogram of Features (Choose feature you want to see by clicking on the legend)',
+            title=title,
             barmode='overlay',
             xaxis_title='Value',
             yaxis_title='Count'
@@ -121,13 +121,22 @@ if 1 == 1:
         st.plotly_chart(fig)
     #
     #
-    histogram_list = ["danceability","energy","loudness","mode","speechiness","acousticness","instrumentalness","liveness","valence","tempo","time_signature"]
+    histogram_list = ["danceability","energy","valence"]
+    create_hostogram_plot(histogram_list, "Histogram of Danceability, Energy & Valence")
+    
+    histogram_list = ["speechiness","acousticness","liveness"]
+    #histogram_list = ["danceability","energy","loudness","speechiness","acousticness","instrumentalness","liveness","valence","tempo","time_signature"]
     #histogram_list = ["danceability","energy"]
-    create_hostogram_plot(histogram_list)
-    #histogram_list = ["speechiness","instrumentalness"]
-    #create_hostogram_plot(histogram_list)
-    #histogram_list = ["loudness","acousticness","liveness","valence","tempo"]
-    #create_hostogram_plot(histogram_list)
+    create_hostogram_plot(histogram_list, "Histogram of Speechiness, Acousticness & Liveness")
+    
+    histogram_list = ["instrumentalness"]
+    create_hostogram_plot(histogram_list, "Histogram of Instrumentalness")
+    
+    histogram_list = ["loudness"]
+    create_hostogram_plot(histogram_list, "Histogram of Loudness")
+    
+    histogram_list = ["tempo"]
+    create_hostogram_plot(histogram_list,"Histogram of Tempo")
     
     #-------------------------------------------------------------------------------------------#
     #ch = chartify.Chart(x_axis_type="categorical")
