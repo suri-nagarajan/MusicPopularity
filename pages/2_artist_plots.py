@@ -80,10 +80,12 @@ plt.xlabel('Key')
 plt.ylabel('Popularity')
 st.pyplot(plt)
 
-# Plotly distribution plot
-fig = px.violin(filtered_data, x='key', y='popularity', color='key', title='Popularity Distribution by Key', box=True, points='all')
-# Display the plot
-st.plotly_chart(fig)
+#--------------------------------------------------------#
+## Plotly distribution plot (violin plot)
+#fig = px.violin(filtered_data, x='key', y='popularity', color='key', title='Popularity Distribution by Key', box=True, points='all')
+## Display the plot
+#st.plotly_chart(fig)
+#--------------------------------------------------------#
 
 # Count the number of songs per key
 key_count = filtered_data['key'].value_counts().reset_index()
@@ -105,7 +107,7 @@ plt.ylabel('Popularity')
 st.pyplot(plt)
 
 
-st.write('Filtered Data:', filtered_data)
+#st.write('Filtered Data:', filtered_data)
 
 
 

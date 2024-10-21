@@ -113,10 +113,12 @@ if 1 == 1:
     #ch.show()
     #-------------------------------------------------------------------------------------------#
 
-    # Plotly distribution plot
-    fig = px.violin(filtered_data, x='key', y='popularity', color='key', title='Popularity Distribution by Key', box=True, points='all')
-    # Display the plot
-    st.plotly_chart(fig)
+    #--------------------------------------------------------#
+    ## Plotly distribution plot (violin plot)
+    #fig = px.violin(filtered_data, x='key', y='popularity', color='key', title='Popularity Distribution by Key', box=True, points='all')
+    ## Display the plot
+    #st.plotly_chart(fig)
+    #--------------------------------------------------------#
 
     # Count the number of songs per key
     key_count = filtered_data['key'].value_counts().reset_index()
@@ -162,7 +164,7 @@ if 1 == 1:
     #st.altair_chart(c1, use_container_width=True)
     #-------------------------------------------------------------#
 
-    st.write('Song features Data:', filtered_data)
+    #st.write('Song features Data:', filtered_data)
 
     # Drop text columns
     filtered_data = filtered_data.select_dtypes(include=[int, float])
