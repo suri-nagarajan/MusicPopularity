@@ -6,9 +6,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 #import chartify
 import altair as alt
-import streamlit.components.v1 as components
-
-import streamlit as st
+#import streamlit.components.v1 as components
 
 #if 'load_state' not in st.session_state:
 #        st.session_state['load_state'] = False
@@ -125,13 +123,22 @@ if 1 == 1:
     # Display the plot
     st.pyplot(plt)
     
+    # Box plot of popularity vs time_signature
+    plt.figure(figsize=(10, 6))
+    palette = sns.color_palette("husl", len(key_mapping))
+    sns.boxplot(data=filtered_data, x='time_signature', y='popularity',palette=palette)
+    plt.title('Popularity vs time_signature')
+    plt.xlabel('time_signature')
+    plt.ylabel('Popularity')
+    st.pyplot(plt)
+    
     
     #Plot histogram of all song features
     def create_hostogram_plot(hist_list = [], title ="Histogram of Features (Choose feature you want to see by clicking on the legend)"):
         # Create histograms
         fig = go.Figure()
         for col in histogram_list:
-            fig.add_trace(go.Histogram(x=df[col], name=col, opacity=0.75))
+            fig.add_trace(go.Histogram(x=filtered_data[col], name=col, opacity=0.5))
         # Update layout
         fig.update_layout(
             title=title,

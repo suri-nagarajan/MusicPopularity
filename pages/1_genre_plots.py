@@ -3,6 +3,7 @@ import streamlit as st
 import seaborn as sns
 import matplotlib.pyplot as plt
 import plotly.express as px
+import plotly.graph_objects as go
  
 # Streamlit app
 st.title('Popularity Distribution by Genre')
@@ -89,6 +90,50 @@ plt.title('Popularity Distribution by Key')
 #
 # Display the plot
 st.pyplot(plt)
+
+# Box plot of popularity vs time_signature
+plt.figure(figsize=(10, 6))
+palette = sns.color_palette("husl", len(key_mapping))
+sns.boxplot(data=filtered_data, x='time_signature', y='popularity',palette=palette)
+plt.title('Popularity vs time_signature')
+plt.xlabel('time_signature')
+plt.ylabel('Popularity')
+st.pyplot(plt)
+
+
+#Plot histogram of all song features
+def create_hostogram_plot(hist_list = [], title ="Histogram of Features (Choose feature you want to see by clicking on the legend)"):
+    # Create histograms
+    fig = go.Figure()
+    for col in histogram_list:
+        fig.add_trace(go.Histogram(x=filtered_data[col], name=col, opacity=0.5))
+    # Update layout
+    fig.update_layout(
+        title=title,
+        barmode='overlay',
+        xaxis_title='Value',
+        yaxis_title='Count'
+    )
+    # Display the plot
+    st.plotly_chart(fig)
+#
+#
+histogram_list = ["danceability","energy","valence"]
+create_hostogram_plot(histogram_list, "Histogram of Danceability, Energy & Valence")
+
+histogram_list = ["speechiness","acousticness","liveness"]
+#histogram_list = ["danceability","energy","loudness","speechiness","acousticness","instrumentalness","liveness","valence","tempo","time_signature"]
+#histogram_list = ["danceability","energy"]
+create_hostogram_plot(histogram_list, "Histogram of Speechiness, Acousticness & Liveness")
+
+histogram_list = ["instrumentalness"]
+create_hostogram_plot(histogram_list, "Histogram of Instrumentalness")
+
+histogram_list = ["loudness"]
+create_hostogram_plot(histogram_list, "Histogram of Loudness")
+
+histogram_list = ["tempo"]
+create_hostogram_plot(histogram_list,"Histogram of Tempo")
 
 #--------------------------------------------------------#
 ## Plotly distribution plot (violin plot)
