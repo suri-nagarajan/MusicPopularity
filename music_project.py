@@ -6,6 +6,9 @@ import plotly.express as px
 import plotly.graph_objects as go
 #import chartify
 import altair as alt
+import streamlit.components.v1 as components
+
+import streamlit as st
 
 #if 'load_state' not in st.session_state:
 #        st.session_state['load_state'] = False
@@ -14,6 +17,10 @@ import altair as alt
 if 1 == 1:    
     # Streamlit app
     st.title('Song Popularity analysis using song features')
+    
+    # Display the hyperlink
+    st.markdown('[Click here to learn about Spotify Music Feature Data Attributes Details (Data Dictionary)](https://developer.spotify.com/documentation/web-api/reference/get-audio-features)')
+
 
     #st.write(st.session_state)
 
