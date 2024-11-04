@@ -6,6 +6,7 @@ import json
 import pickle
 import pprint as pp
 from collections import OrderedDict
+import gzip
 
 import pandas as pd
 from category_encoders import TargetEncoder
@@ -33,7 +34,31 @@ def authenticate_spotify():
     return sp
 
 def loadModel(modelName):
-    model = pickle.load(open(modelName + ".pckl", 'rb'))
+    # Load all fragments
+    #model = RandomForestClassifier()
+    
+    st.write(modelName)
+    with gzip.open(modelName + '.pckl.gz', 'rb') as f:
+        model = pickle.load(f)
+
+    
+    #for i in range(3):
+    #    filename = modelName + '_' + str(i) + '.pckl'
+    #    with open(filename, 'rb') as f:
+    #        st.write(filename)
+    #        if (i == 0):
+    #            model_0 = pickle.load(f)
+    #            fragment_0 = pickle.dumps(model_0)
+    #        if (i == 1):
+    #            model_1 = pickle.load(f)
+    #            fragment_1 = pickle.dumps(model_1)
+    #        if (i == 2):
+    #            model_2 = pickle.load(f)
+    #            fragment_2 = pickle.dumps(model_2)  
+    #        
+    ##model = pickle.load(open(modelName + ".pckl", 'rb'))
+    ##model.estimators_ = estimators
+    #model = pickle.loads(fragment_0 + fragment_1 + fragment_2)
     return model
     
 # Function to search for a song and get its audio features
