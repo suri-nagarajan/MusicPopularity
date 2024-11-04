@@ -18,8 +18,10 @@ from sklearn.metrics import classification_report
 # Spotify API credentials
 #SPOTIFY_CLIENT_ID = 'your_spotify_client_id'  # Replace with your Spotify client ID
 #SPOTIFY_CLIENT_SECRET = 'your_spotify_client_secret'  # Replace with your Spotify client secret
-SPOTIFY_CLIENT_ID = st.text_input('Enter SPOTIFY_CLIENT_ID:', '')
-SPOTIFY_CLIENT_SECRET = st.text_input('Enter SPOTIFY_CLIENT_SECRET:', '')
+#SPOTIFY_CLIENT_ID = st.text_input('Enter SPOTIFY_CLIENT_ID:', '')
+#SPOTIFY_CLIENT_SECRET = st.text_input('Enter SPOTIFY_CLIENT_SECRET:', '')
+SPOTIFY_CLIENT_ID = st.secrets.spotify_credentials.CLIENT_ID
+SPOTIFY_CLIENT_SECRET = st.secrets.spotify_credentials.CLIENT_SECRET
 
 #Convert to numeric
 def convert_to_numeric(value):
