@@ -7,3 +7,4 @@ chartify
 altair
 spotipy
 category_encoders
+scikit-learn
