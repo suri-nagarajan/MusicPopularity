@@ -7,6 +7,7 @@ import pickle
 import pprint as pp
 from collections import OrderedDict
 import gzip
+import plotly.graph_objects as go
 
 import pandas as pd
 from category_encoders import TargetEncoder
@@ -36,8 +37,7 @@ def authenticate_spotify():
 def loadModel(modelName):
     # Load all fragments
     #model = RandomForestClassifier()
-    
-    st.write(modelName)
+    #st.write(modelName)
     with gzip.open(modelName + '.pckl.gz', 'rb') as f:
         model = pickle.load(f)
 
@@ -60,7 +60,7 @@ def loadModel(modelName):
     ##model.estimators_ = estimators
     #model = pickle.loads(fragment_0 + fragment_1 + fragment_2)
     return model
-    
+
 # Function to search for a song and get its audio features
 def get_audio_features(sp, song_name):
     # Search for the song by name
@@ -216,11 +216,51 @@ if song_name:
     pred_popularity = rf_model_loaded.predict(X_encoded_sample)[0,]
     if pred_popularity == 1.0:
         predicted_popularity = 'Low'
+        color = 'red'
     elif pred_popularity == 2.0:
         predicted_popularity = 'Medium'
+        color = 'medium'
     else:
         predicted_popularity = 'High'
+        color = 'green'
+        
     st.write('Song Popularity prediction: ' + predicted_popularity)
+    
+    # Create the gauge
+    level = predicted_popularity
+    value = pred_popularity
+    fig = go.Figure(go.Indicator(
+    mode="gauge+number",
+    value=value,
+    #title={'text': f'Popularity: {level}'},
+    gauge={'axis': {'range': [0, 3], 'tickvals': [1, 2, 3], 'ticktext': ["Low", "Medium", "High"]},
+           'bar': {'color': "lightblue"},
+           'steps': [
+               {'range': [0, 1], 'color': "white"},
+               {'range': [1, 2], 'color': "white"},
+               {'range': [2, 3], 'color': "white"}],
+           'threshold': {
+                   'line': {'color': "black", 'width': 3},
+                   'thickness': 0.50,
+                   'value': value}})) 
+    
+    fig.update_layout(
+    title=dict(
+        text = f'Popularity: {level}',
+        x=0.5,  # X position (0 = left, 1 = right, 0.5 = center)
+        y=0.5, # Y position (0 = bottom, 1 = top)
+        xanchor='center',  # Horizontal alignment
+        yanchor='top',  # Vertical alignment
+        font=dict(
+            family="Arial", 
+            size=16,  # Font size
+            color="black"
+        )
+    )
+)
+    # Render the gauge in Streamlit
+    st.plotly_chart(fig)
+    
     #st.write(rf_model_loaded.predict(X_encoded_sample))
     
     # Convert dictionary values to a list and then to a 2D array 
