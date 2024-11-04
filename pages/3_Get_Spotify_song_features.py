@@ -2,13 +2,14 @@ import streamlit as st
 import spotipy
 import numpy as np
 from spotipy.oauth2 import SpotifyClientCredentials
+import matplotlib.pyplot as plt
 import json
 import pickle
 import pprint as pp
 from collections import OrderedDict
 import gzip
 import plotly.graph_objects as go
-
+import seaborn as sns
 import pandas as pd
 from category_encoders import TargetEncoder
 from sklearn.preprocessing import StandardScaler, PowerTransformer #, LabelEncoder
@@ -276,4 +277,28 @@ if song_name:
     #predictions = model.predict(audio_data) 
     #st.write("Model prediction:")
     #st.write(predictions)
+
+    estimators = rf_model_loaded.estimators_
+    tree_predictions = np.array([tree.predict(X_encoded_sample)+1 for tree in estimators])
+    tree_predictions_flat = tree_predictions.flatten()
+    #st.write(tree_predictions_flat)
+    
+    # Create the histogram
+    #plt.hist(tree_predictions_flat, bins=3, edgecolor='k', alpha=0.7)
+    #plt.xticks([1, 2, 3])
+    #plt.xlabel('Predicted Values')
+    #plt.ylabel('Frequency')
+    #plt.title('Histogram of Predictions from All Trees in the RandomForest')
+    #st.pyplot(plt)
+    
+    # Create the histogram
+    plt.figure(figsize=(10, 6))
+    sns.histplot(tree_predictions_flat, bins=3, kde=True)
+    plt.title(f'Histogram of Predictions from All Trees in the RandomForest')
+    plt.xlabel('Predicted Popularity')
+    plt.ylabel('Frequency')
+    st.pyplot(plt)
+
+
+
 
