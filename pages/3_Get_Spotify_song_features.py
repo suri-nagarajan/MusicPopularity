@@ -294,6 +294,7 @@ if song_name:
     # Create the histogram
     plt.figure(figsize=(10, 6))
     sns.histplot(tree_predictions_flat, bins=3, kde=True)
+    plt.xticks([1, 2, 3])
     plt.title(f'Histogram of Predictions from All Trees in the RandomForest')
     plt.xlabel('Predicted Popularity')
     plt.ylabel('Frequency')
