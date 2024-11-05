@@ -313,9 +313,9 @@ if song_name:
     st.write('Song Popularity prediction: ' + predicted_popularity)
     st.write(' ')
     st.write('Probability the song Popularity to be.')
-    st.write('Low    :' + str(pred_prob[0,]*100) + '%')
-    st.write('Medium :' + str(pred_prob[1,]*100) + '%')
-    st.write('High   :' + str(pred_prob[2,]*100) + '%')
+    st.write('Low    :' + str(round(pred_prob[0,] * 100, 2)) + '%')
+    st.write('Medium :' + str(round(pred_prob[1,] * 100, 2)) + '%')
+    st.write('High   :' + str(round(pred_prob[2,] * 100, 2)) + '%')
     
     # Create the gauge
     level = predicted_popularity
