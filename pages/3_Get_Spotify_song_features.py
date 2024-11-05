@@ -357,6 +357,7 @@ if song_name:
     estimators = rf_model_loaded.estimators_
     tree_predictions = np.array([tree.predict(X_encoded_sample)+1 for tree in estimators])
     tree_predictions_flat = tree_predictions.flatten()
+    #st.write(tree_predictions)
     #st.write(tree_predictions_flat)
     
     # Create the histogram
@@ -391,8 +392,43 @@ if song_name:
         'Importance': feature_importances
     })
     # Plot feature importances
-    fig = px.bar(feature_importance_df, x='Importance', y='Feature', orientation='h', title='Feature Importances')
+    fig = px.bar(feature_importance_df, 
+                    x='Importance', 
+                    y='Feature', 
+                    orientation='h', 
+                    title='Feature Importances')
     st.plotly_chart(fig)
     
-    
-    
+    # Create scatter plot using Plotly Express
+    # Map numeric predictions to labels
+    popularity_map = {1: 'Low', 2: 'Medium', 3: 'High'}
+    popularity_colors = {'Low': '#FF6961', 'Medium': '#FFD700', 'High': '#77DD77'}
+    # Convert tree predictions to a DataFrame for Plotly
+    df = pd.DataFrame({
+        'Tree Index': range(1, len(tree_predictions_flat) + 1),
+        'Prediction': tree_predictions_flat
+    })
+    df['Popularity'] = df['Prediction'].map(popularity_map)  # Map numeric predictions to labels
+
+    # Create scatter plot using Plotly Express
+    fig = px.scatter(
+        df,
+        x='Tree Index',
+        y='Popularity',
+        color='Popularity',
+        color_discrete_map=popularity_colors,
+        title="Decision Outputs of Each Tree in the Random Forest",
+        labels={"Tree Index": "Tree Index", "Popularity": "Predicted Popularity"}
+    )
+
+    # Update layout for a cleaner appearance
+    fig.update_layout(
+        xaxis_title="Tree Index",
+        yaxis_title="Predicted Popularity Level",
+        yaxis=dict(categoryorder="array", categoryarray=["Low", "Medium", "High"])
+    )
+
+    # Render in Streamlit
+    st.plotly_chart(fig)
+
+
