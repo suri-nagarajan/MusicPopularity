@@ -64,6 +64,66 @@ def loadModel(modelName):
     #model = pickle.loads(fragment_0 + fragment_1 + fragment_2)
     return model
 
+# Function to get song details
+def get_song_features():
+    #Track Name
+    track_name = 'Custom'
+    
+    # Input for track genre
+    track_genre = st.text_input("Enter the track genre:")
+
+    # Input for artists
+    artist_name = st.text_input("Enter the artists:")
+
+    # Slider for time signature
+    time_signature = st.slider("Select the time signature:", min_value=3, max_value=7, value=4)
+
+    # Radio button for mode
+    mode = st.radio("Select the mode:", options=[0, 1], format_func=lambda x: "Major" if x == 1 else "Minor")
+
+    # Dropdown for key selection
+    key_mapping = {0: "C", 1: "C#", 2: "D", 3: "D#", 4: "E", 5: "F", 6: "F#", 7: "G", 8: "G#", 9: "A", 10: "A#", 11: "B"}
+    key = st.selectbox("Select the key:", options=list(key_mapping.keys()), format_func=lambda x: key_mapping[x])
+
+    # Slider for duration in milliseconds (1 minute to 6 minutes) 
+    duration_ms = st.slider("Select the duration (ms):", min_value=60000, max_value=360000, step=1000, value=180000)
+
+    # Sliders for additional features
+    danceability = st.slider("Danceability:", min_value=0.0, max_value=1.0, step=0.01, value=0.5)
+    acousticness = st.slider("Acousticness:", min_value=0.0, max_value=1.0, step=0.01, value=0.5)
+    energy = st.slider("Energy:", min_value=0.0, max_value=1.0, step=0.01, value=0.5)
+    speechiness = st.slider("Speechiness:", min_value=0.0, max_value=1.0, step=0.01, value=0.5)
+    instrumentalness = st.slider("Instrumentalness:", min_value=0.0, max_value=1.0, step=0.01, value=0.5)
+    liveness = st.slider("Liveness:", min_value=0.0, max_value=1.0, step=0.01, value=0.5)
+    valence = st.slider("Valence:", min_value=0.0, max_value=1.0, step=0.01, value=0.5)
+    
+    # Slider for loudness 
+    loudness = st.slider("Loudness (dB):", min_value=-60, max_value=0, step=1, value=-30)
+    
+    # Radio button for explicit content 
+    explicit = st.radio("Is the content explicit?", options=[0, 1], format_func=lambda x: "True" if x == 1 else "False") 
+    
+    # Slider for tempo in BPM (0 to 250) 
+    tempo = st.slider("Tempo (BPM):", min_value=0, max_value=250, step=1, value=120)
+    
+    # Return the values as a dictionary
+    return track_name, artist_name,{
+        "time_signature": time_signature,
+        "mode": mode,
+        "key": key,
+        "duration_ms":duration_ms,
+        "danceability": danceability,
+        "acousticness": acousticness,
+        "energy": energy,
+        "speechiness": speechiness,
+        "instrumentalness": instrumentalness,
+        "liveness": liveness,
+        "valence": valence,
+        "loudness": loudness,
+        "explicit":explicit,
+        "tempo":tempo
+    }, track_genre
+    
 # Function to search for a song and get its audio features
 def get_audio_features(sp, song_name):
     # Search for the song by name
@@ -82,32 +142,51 @@ def get_audio_features(sp, song_name):
         
         # Get the genres of the first artist 
         first_artist_data = sp.artist(first_artist_id) 
-        genres = first_artist_data['genres'][0] if first_artist_data['genres'] else None
+        genres = first_artist_data['genres'][0] if first_artist_data['genres'] else ''
         
         return track_name, artist_name, audio_features, genres
     else:
         return None, None, None, None
 
+
+
+# Call the function and display the values
+#song_features = get_song_features()
+#st.write(song_features)
+
+
 # Streamlit app
 st.title("Spotify Song Audio Features")
 
-# Input from user
-song_name = st.text_input("Enter a song name:")
+option = st.radio(
+    "How would you like get Song details ?", 
+    ('Retrieve from Spotify', 'Experiment by enter it your own values')
+    )
 
-if song_name:
-    sp = authenticate_spotify()  # Authenticate Spotify API
+if (option == 'Experiment by enter it your own values'):
+    # Enter song details
+    track_name, artist_name, audio_features, genres  = get_song_features()
+    song_name = 'Custom'
+    st.write(audio_features)
     
-    # Get song details and audio features
-    track_name, artist_name, audio_features, genres = get_audio_features (sp, song_name)
-    
-    if audio_features:
-        st.subheader(f"Song: {track_name} by {artist_name}")
-        st.write("Artist Name:" + artist_name)
-        st.write("Genres :" + genres)
-        #st.write("Audio Features:")
-        #st.json(audio_features)
-    else:
-        st.error("No song found. Please try again with a different song name.")
+if (option == 'Retrieve from Spotify'):
+    # Get song name
+    song_name = st.text_input("Enter a song name:")
+
+    if song_name:
+        sp = authenticate_spotify()  # Authenticate Spotify API
+        
+        # Get song details and audio features
+        track_name, artist_name, audio_features, genres = get_audio_features (sp, song_name)
+        
+        if audio_features:
+            st.subheader(f"Song: {track_name} by {artist_name}")
+            st.write("Artist Name:" + artist_name)
+            st.write("Genres :" + genres)
+            #st.write("Audio Features:")
+            #st.json(audio_features)
+        else:
+            st.error("No song found. Please try again with a different song name.")
 
 if song_name:
     #read data
