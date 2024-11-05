@@ -9,6 +9,7 @@ import pprint as pp
 from collections import OrderedDict
 import gzip
 import plotly.graph_objects as go
+import plotly.express as px
 import seaborn as sns
 import pandas as pd
 from category_encoders import TargetEncoder
@@ -337,26 +338,14 @@ if song_name:
             family="Arial", 
             size=16,  # Font size
             color="black"
+            )
         )
     )
-)
     # Render the gauge in Streamlit
     st.plotly_chart(fig)
     
     #st.write(rf_model_loaded.predict(X_encoded_sample))
     
-    # Convert dictionary values to a list and then to a 2D array 
-    #audio_data = np.array(list(audio_data.values())).reshape(1, -1)
-    #audio_data = [convert_to_numeric(item) for item in audio_data]    
-    #st.write(audio_data)
-    
-    
-    
-    #Predict popularity
-    #predictions = model.predict(audio_data) 
-    #st.write("Model prediction:")
-    #st.write(predictions)
-
     estimators = rf_model_loaded.estimators_
     tree_predictions = np.array([tree.predict(X_encoded_sample)+1 for tree in estimators])
     tree_predictions_flat = tree_predictions.flatten()
@@ -378,7 +367,21 @@ if song_name:
     plt.xlabel('Predicted Popularity')
     plt.ylabel('Frequency')
     st.pyplot(plt)
+    
+    # Get Feature Importances
+    feature_importances = rf_model_loaded.feature_importances_
+    #st.write(feature_importances)
+    # Get model parameters
+    feature_names = rf_model_loaded.feature_names_in_
+    #st.write(feature_names)
 
-
-
-
+    
+    # Display Feature Importances
+    # Create a DataFrame for feature importances
+    feature_importance_df = pd.DataFrame({
+        'Feature': feature_names,
+        'Importance': feature_importances
+    })
+    # Plot feature importances
+    fig = px.bar(feature_importance_df, x='Importance', y='Feature', orientation='h', title='Feature Importances')
+    st.plotly_chart(fig)
