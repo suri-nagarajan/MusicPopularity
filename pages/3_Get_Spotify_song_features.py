@@ -306,8 +306,16 @@ if song_name:
     else:
         predicted_popularity = 'High'
         color = 'green'
+    
+    #Predict Probability of each class.
+    pred_prob = rf_model_loaded.predict_proba(X_encoded_sample)[0,]
         
     st.write('Song Popularity prediction: ' + predicted_popularity)
+    st.write(' ')
+    st.write('Probability the song Popularity to be.')
+    st.write('Low    :' + str(pred_prob[0,]*100) + '%')
+    st.write('Medium :' + str(pred_prob[1,]*100) + '%')
+    st.write('High   :' + str(pred_prob[2,]*100) + '%')
     
     # Create the gauge
     level = predicted_popularity
@@ -385,3 +393,6 @@ if song_name:
     # Plot feature importances
     fig = px.bar(feature_importance_df, x='Importance', y='Feature', orientation='h', title='Feature Importances')
     st.plotly_chart(fig)
+    
+    
+    
