@@ -90,14 +90,16 @@ def fn_display_dashboard(page='main'):
     st.table(stats)
 
     # Plot
+    st.markdown("#### Histogram of Popularity: Shows distribution of popularity of songs and range of popularity and how common a popularity is for the selected set of songs.")
     plt.figure(figsize=(10, 6))
     sns.histplot(filtered_data['popularity'], bins=10, kde=True)
-    plt.title(f'Popularity Distribution for all songs')
+    plt.title(f'Popularity Distribution of songs')
     plt.xlabel('Popularity')
     plt.ylabel('Frequency')
     st.pyplot(plt)
 
     # Box plot of popularity vs key
+    st.markdown("#### Boxplot of Popularity Vs Key: Shows song's popularity based on the Key used. Box plot shows the most common occurance and outliers.")
     plt.figure(figsize=(10, 6))
     palette = sns.color_palette("husl", len(key_mapping))
     sns.boxplot(data=filtered_data, x='key', y='popularity', order=["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"],palette=palette)
@@ -107,6 +109,7 @@ def fn_display_dashboard(page='main'):
     st.pyplot(plt)
     
     # Create a violin plot
+    st.markdown("#### Violin Plot of Popularity Vs Key: Shows song's popularity based on the Key used.  This plot shows the most common occurance, outliers and how common is each popularity.")
     plt.figure(figsize=(10, 6))
     palette = sns.color_palette("husl", len(key_mapping))
     sns.violinplot(x='key', y='popularity', data=filtered_data, order=["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"],palette=palette)
