@@ -18,10 +18,12 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report
 
 # Spotify API credentials
+#Get Spotify keys from user input
 #SPOTIFY_CLIENT_ID = 'your_spotify_client_id'  # Replace with your Spotify client ID
 #SPOTIFY_CLIENT_SECRET = 'your_spotify_client_secret'  # Replace with your Spotify client secret
 #SPOTIFY_CLIENT_ID = st.text_input('Enter SPOTIFY_CLIENT_ID:', '')
 #SPOTIFY_CLIENT_SECRET = st.text_input('Enter SPOTIFY_CLIENT_SECRET:', '')
+#Get Spotify keys from Streamlit Secret
 SPOTIFY_CLIENT_ID = st.secrets.spotify_credentials.CLIENT_ID
 SPOTIFY_CLIENT_SECRET = st.secrets.spotify_credentials.CLIENT_SECRET
 
@@ -39,30 +41,13 @@ def authenticate_spotify():
     return sp
 
 def loadModel(modelName):
-    # Load all fragments
-    #model = RandomForestClassifier()
-    #st.write(modelName)
+    # Load model
+    #If Model is larege create a zip file (useful for streamlit cloud) 
     with gzip.open(modelName + '.pckl.gz', 'rb') as f:
         model = pickle.load(f)
-
-    
-    #for i in range(3):
-    #    filename = modelName + '_' + str(i) + '.pckl'
-    #    with open(filename, 'rb') as f:
-    #        st.write(filename)
-    #        if (i == 0):
-    #            model_0 = pickle.load(f)
-    #            fragment_0 = pickle.dumps(model_0)
-    #        if (i == 1):
-    #            model_1 = pickle.load(f)
-    #            fragment_1 = pickle.dumps(model_1)
-    #        if (i == 2):
-    #            model_2 = pickle.load(f)
-    #            fragment_2 = pickle.dumps(model_2)  
-    #        
-    ##model = pickle.load(open(modelName + ".pckl", 'rb'))
-    ##model.estimators_ = estimators
-    #model = pickle.loads(fragment_0 + fragment_1 + fragment_2)
+    #For local runs we can use normal model files (comment abobe option and uncomment option below).
+    #with open(modelName + '.pckl', 'rb') as f:
+    #    model = pickle.load(f)
     return model
 
 # Function to get song details
@@ -140,20 +125,20 @@ def get_audio_features(sp, song_name):
                 
         # Get audio features for the track
         audio_features = sp.audio_features([track_id])[0]
+        song_id = track_id
+        track = sp.track(song_id)
+        popularity = track['popularity']
+        #print(f"Popularity: {popularity}")
+
         
         # Get the genres of the first artist 
         first_artist_data = sp.artist(first_artist_id) 
         genres = first_artist_data['genres'][0] if first_artist_data['genres'] else ''
         
-        return track_name, artist_name, audio_features, genres
+        return track_name, artist_name, audio_features, genres, popularity
     else:
-        return None, None, None, None
+        return None, None, None, None, None
 
-
-
-# Call the function and display the values
-#song_features = get_song_features()
-#st.write(song_features)
 
 
 # Streamlit app
@@ -178,12 +163,13 @@ if (option == 'Retrieve from Spotify'):
         sp = authenticate_spotify()  # Authenticate Spotify API
         
         # Get song details and audio features
-        track_name, artist_name, audio_features, genres = get_audio_features (sp, song_name)
+        track_name, artist_name, audio_features, genres, spotify_popularity = get_audio_features (sp, song_name)
         
         if audio_features:
             st.subheader(f"Song: {track_name} by {artist_name}")
             st.write("Artist Name:" + artist_name)
             st.write("Genres :" + genres)
+            st.write("Spotify Popularity :" + str(spotify_popularity))
             #st.write("Audio Features:")
             #st.json(audio_features)
         else:
@@ -266,13 +252,6 @@ if song_name:
     ('explicit', audio_data['explicit'])
     ])
         
-    #audio_data =  list(audio_data.values())
-    # Separate the target and feature variables
-    #X = audio_data[all_features]
-    #y = audio_data['popularity_level']
-
-    #--->st.write(audio_data)
-    
     # Separate the target and feature variables
     audio_data_df = pd.DataFrame([audio_data])
     st.write('Audio features:') #('Audi Data converted to a data frame format')
@@ -284,7 +263,8 @@ if song_name:
     st.write('Audio features after encoding')
     st.write(X_encoded_sample)
     
-    rf_model_loaded=loadModel("RandomForestClassifier")
+    #This is where we load the Randomclassifier Model by calling loadModel() function.
+    rf_model_loaded=loadModel('RandomForestClassifier')
     # Print the model's parameters
     #st.write("Model Parameters:")
     #st.write(rf_model_loaded.get_params())
@@ -361,14 +341,6 @@ if song_name:
     #st.write(tree_predictions_flat)
     
     # Create the histogram
-    #plt.hist(tree_predictions_flat, bins=3, edgecolor='k', alpha=0.7)
-    #plt.xticks([1, 2, 3])
-    #plt.xlabel('Predicted Values')
-    #plt.ylabel('Frequency')
-    #plt.title('Histogram of Predictions from All Trees in the RandomForest')
-    #st.pyplot(plt)
-    
-    # Create the histogram
     plt.figure(figsize=(10, 6))
     sns.histplot(tree_predictions_flat, bins=3, kde=True)
     plt.xticks([1, 2, 3])
@@ -389,14 +361,14 @@ if song_name:
     # Create a DataFrame for feature importances
     feature_importance_df = pd.DataFrame({
         'Feature': feature_names,
-        'Importance': feature_importances
+        'Importance': feature_importances *100
     })
     # Plot feature importances
     fig = px.bar(feature_importance_df, 
                     x='Importance', 
                     y='Feature', 
                     orientation='h', 
-                    title='Feature Importances')
+                    title='Feature Importances (in %)')
     st.plotly_chart(fig)
     
     # Create scatter plot using Plotly Express
@@ -431,4 +403,15 @@ if song_name:
     # Render in Streamlit
     st.plotly_chart(fig)
 
+    # Get Out-of-Bag Score
+    #ob_score = rf_model_loaded.oob_score_
 
+    # Get Out-of-Bag Decision Function
+    #ob_decision_function = rf_model_loaded.oob_decision_function_
+
+    # Display Out-of-Bag Score
+    #st.write(f"Out-of-Bag Score: {oob_score}")
+
+    # Display Out-of-Bag Decision Function
+    #st.write("Out-of-Bag Decision Function:")
+    #st.write(oob_decision_function)
