@@ -142,7 +142,7 @@ def get_audio_features(sp, song_name):
 
 
 # Streamlit app
-st.title("Spotify Song Audio Features")
+st.title("Popularity Prediction and Experiment")
 
 option = st.radio(
     "How would you like get Song details ?", 
