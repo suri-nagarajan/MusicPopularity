@@ -18,12 +18,19 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report
 
 # Spotify API credentials
-#Get Spotify keys from user input
+#Option 1: Get Spotify keys from user input (uncomment below liknes and comment option 2 to use this option)
 #SPOTIFY_CLIENT_ID = 'your_spotify_client_id'  # Replace with your Spotify client ID
 #SPOTIFY_CLIENT_SECRET = 'your_spotify_client_secret'  # Replace with your Spotify client secret
 #SPOTIFY_CLIENT_ID = st.text_input('Enter SPOTIFY_CLIENT_ID:', '')
 #SPOTIFY_CLIENT_SECRET = st.text_input('Enter SPOTIFY_CLIENT_SECRET:', '')
-#Get Spotify keys from Streamlit Secret
+#
+# Or
+#
+#Option 2: Get Spotify keys from Streamlit Secret
+#To use this option Comment option 1 and in the folder where this file is create a file 'secrets.toml' with following contents
+#[spotify_credentials]
+#CLIENT_ID = "<your_spotify_client_id>"
+#CLIENT_SECRET = "<Enter SPOTIFY_CLIENT_SECRET>"
 SPOTIFY_CLIENT_ID = st.secrets.spotify_credentials.CLIENT_ID
 SPOTIFY_CLIENT_SECRET = st.secrets.spotify_credentials.CLIENT_SECRET
 
@@ -34,12 +41,17 @@ def convert_to_numeric(value):
     except ValueError:
         return value
         
-# Setup Spotify authentication
+# Setup Spotify authentication so we can call Spotify APIs
 def authenticate_spotify():
     auth_manager = SpotifyClientCredentials(client_id=SPOTIFY_CLIENT_ID, client_secret=SPOTIFY_CLIENT_SECRET)
     sp = spotipy.Spotify(auth_manager=auth_manager)
     return sp
 
+#This function loads analytic models
+#Note:  We are reading a zip file which the zipped version of pickle file (model.pckl)
+#       The reason we are doing this is model files tent to be large in 100's of MB
+#       But github has a file size restriction of 100MB max per file.
+#
 def loadModel(modelName):
     # Load model
     #If Model is larege create a zip file (useful for streamlit cloud) 
@@ -146,10 +158,10 @@ st.title("Popularity Prediction and Experiment")
 
 option = st.radio(
     "How would you like get Song details ?", 
-    ('Retrieve from Spotify', 'Experiment by enter it your own values')
+    ('Retrieve from Spotify', 'Experiment by entering your own values')
     )
 
-if (option == 'Experiment by enter it your own values'):
+if (option == 'Experiment by entering your own values'):
     # Enter song details
     track_name, artist_name, audio_features, genres  = get_song_features()
     song_name = 'Custom'
@@ -297,40 +309,102 @@ if song_name:
     st.write('Medium :' + str(round(pred_prob[1,] * 100, 2)) + '%')
     st.write('High   :' + str(round(pred_prob[2,] * 100, 2)) + '%')
     
+    st.markdown("##### Song Popularity as predicted by our analytic model and actual Popularity from Spotify user rating.")
+    st.markdown("###### Our Model predicts Popularity in range:")
+    st.markdown("###### Low (1): 0 to 35, Medium (2): 35 to 70, High(3): 71 to 100")
+    
+    
+    #Create two column plot
+    col1, col2 = st.columns(2)
+    
     # Create the gauge
     level = predicted_popularity
     value = pred_popularity
-    fig = go.Figure(go.Indicator(
-    mode="gauge+number",
-    value=value,
-    #title={'text': f'Popularity: {level}'},
-    gauge={'axis': {'range': [0, 3], 'tickvals': [1, 2, 3], 'ticktext': ["Low", "Medium", "High"]},
-           'bar': {'color': "lightblue"},
-           'steps': [
-               {'range': [0, 1], 'color': "white"},
-               {'range': [1, 2], 'color': "white"},
-               {'range': [2, 3], 'color': "white"}],
-           'threshold': {
-                   'line': {'color': "black", 'width': 3},
-                   'thickness': 0.50,
-                   'value': value}})) 
     
-    fig.update_layout(
-    title=dict(
-        text = f'Popularity: {level}',
-        x=0.5,  # X position (0 = left, 1 = right, 0.5 = center)
-        y=0.5, # Y position (0 = bottom, 1 = top)
-        xanchor='center',  # Horizontal alignment
-        yanchor='top',  # Vertical alignment
-        font=dict(
-            family="Arial", 
-            size=16,  # Font size
-            color="black"
+    with col1:
+        fig = go.Figure(go.Indicator(
+        mode="gauge+number",
+        value=value,
+        title={'text': f'Predicted Popularity'},
+        gauge={'axis': {'range': [0, 3], 'tickvals': [1, 2, 3], 'ticktext': ["Low", "Medium", "High"]},
+               'bar': {'color': "lightblue"},
+               'steps': [
+                   {'range': [0, 1], 'color': "white"},
+                   {'range': [1, 2], 'color': "white"},
+                   {'range': [2, 3], 'color': "white"}],
+               'threshold': {
+                       'line': {'color': "black", 'width': 3},
+                       'thickness': 0.50,
+                       'value': value}})) 
+        
+        fig.update_layout(
+        title=dict(
+            text = f'Popularity: {level}',
+            x=0.5,  # X position (0 = left, 1 = right, 0.5 = center)
+            y=0.5, # Y position (0 = bottom, 1 = top)
+            xanchor='center',  # Horizontal alignment
+            yanchor='top',  # Vertical alignment
+            font=dict(
+                family="Arial", 
+                size=16,  # Font size
+                color="black"
+                )
             )
         )
-    )
-    # Render the gauge in Streamlit
-    st.plotly_chart(fig)
+        # Render the gauge in Streamlit
+        st.plotly_chart(fig)
+        
+    # Create the gauge
+    level = predicted_popularity
+    value = pred_popularity
+    
+    # Create the gauge for Spotify popularity
+    if (option == 'Retrieve from Spotify'):
+        # Determine popularity level 
+        if spotify_popularity <= 35:
+            spotify_popularity_level = 'Low'
+            color = 'red'
+        elif spotify_popularity > 35 and spotify_popularity <= 70:
+            spotify_popularity_level = 'Medium'
+            color = 'yello'
+        else:
+            spotify_popularity_level = 'High'
+            color = 'green'
+        
+        level = spotify_popularity_level
+        value = spotify_popularity
+        with col2:
+            fig = go.Figure(go.Indicator(
+            mode="gauge+number",
+            value=value,
+            title={'text': f'Spotify Popularity'},
+            gauge={'axis': {'range': [0, 100], 'tickvals': [35, 70, 100], 'ticktext': ["Low", "Medium", "High"]},
+                   'bar': {'color': "lightblue"},
+                   'steps': [
+                       {'range': [0, 35], 'color': "white"},
+                       {'range': [36, 70], 'color': "white"},
+                       {'range': [71, 100], 'color': "white"}],
+                   'threshold': {
+                           'line': {'color': "black", 'width': 3},
+                           'thickness': 0.50,
+                           'value': value}})) 
+            
+            fig.update_layout(
+            title=dict(
+                text = f'Popularity: {level}',
+                x=0.5,  # X position (0 = left, 1 = right, 0.5 = center)
+                y=0.5, # Y position (0 = bottom, 1 = top)
+                xanchor='center',  # Horizontal alignment
+                yanchor='top',  # Vertical alignment
+                font=dict(
+                    family="Arial", 
+                    size=16,  # Font size
+                    color="black"
+                    )
+                )
+            )
+            # Render the gauge in Streamlit
+            st.plotly_chart(fig)
     
     #st.write(rf_model_loaded.predict(X_encoded_sample))
     
