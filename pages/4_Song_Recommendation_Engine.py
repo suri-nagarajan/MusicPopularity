@@ -47,115 +47,159 @@ def loadModel(modelName):
         model = pickle.load(f)
     return model
 
-# Function to get song details
-def get_song_features():
-    #Track Name
-    track_name = 'Custom'
-    
-    # Input for track genre
-    track_genre = st.text_input("Enter the track genre:")
+#=================================================================#
+def build_df_from_spotify(sp_conn, song_name, all_features, numerical_features,target_encoder, scaler, feature_importances_normalized, weighted_kmeans_model):
 
-    # Input for artists
-    artist_name = st.text_input("Enter the artists:")
+    from collections import OrderedDict
+    
 
-    # Slider for time signature
-    time_signature = st.slider("Select the time signature:", min_value=3, max_value=7, value=4)
-
-    # Radio button for mode
-    mode = st.radio("Select the mode:", options=[0, 1], format_func=lambda x: "Major" if x == 1 else "Minor")
-
-    # Dropdown for key selection
-    key_mapping = {0: "C", 1: "C#", 2: "D", 3: "D#", 4: "E", 5: "F", 6: "F#", 7: "G", 8: "G#", 9: "A", 10: "A#", 11: "B"}
-    key = st.selectbox("Select the key:", options=list(key_mapping.keys()), format_func=lambda x: key_mapping[x])
-
-    # Slider for duration in milliseconds (1 minute to 6 minutes) 
-    duration_ms = st.slider("Select the duration (ms):", min_value=60000, max_value=360000, step=1000, value=180000)
-
-    # Sliders for additional features
-    danceability = st.slider("Danceability:", min_value=0.0, max_value=1.0, step=0.01, value=0.5)
-    acousticness = st.slider("Acousticness:", min_value=0.0, max_value=1.0, step=0.01, value=0.5)
-    energy = st.slider("Energy:", min_value=0.0, max_value=1.0, step=0.01, value=0.5)
-    speechiness = st.slider("Speechiness:", min_value=0.0, max_value=1.0, step=0.01, value=0.5)
-    instrumentalness = st.slider("Instrumentalness:", min_value=0.0, max_value=1.0, step=0.01, value=0.5)
-    liveness = st.slider("Liveness:", min_value=0.0, max_value=1.0, step=0.01, value=0.5)
-    valence = st.slider("Valence:", min_value=0.0, max_value=1.0, step=0.01, value=0.5)
+    results = sp_conn.search(q=song_name, type='track', limit=1)
     
-    # Slider for loudness 
-    loudness = st.slider("Loudness (dB):", min_value=-60, max_value=0, step=1, value=-30)
-    
-    # Radio button for explicit content 
-    explicit = st.radio("Is the content explicit?", options=[0, 1], format_func=lambda x: "True" if x == 1 else "False") 
-    
-    # Slider for tempo in BPM (0 to 250) 
-    tempo = st.slider("Tempo (BPM):", min_value=0, max_value=250, step=1, value=120)
-    
-    # Return the values as a dictionary
-    return track_name, artist_name,{
-        "time_signature": time_signature,
-        "mode": mode,
-        "key": key,
-        "duration_ms":duration_ms,
-        "danceability": danceability,
-        "acousticness": acousticness,
-        "energy": energy,
-        "speechiness": speechiness,
-        "instrumentalness": instrumentalness,
-        "liveness": liveness,
-        "valence": valence,
-        "loudness": loudness,
-        "explicit":explicit,
-        "tempo":tempo
-    }, track_genre
-    
-# Function to search for a song and get its audio features
-def get_audio_features(sp, song_name):
-    # Search for the song by name
-    results = sp.search(q=song_name, type='track', limit=1)
-    
+    df_song=None
     if results['tracks']['items']:
-        track = results['tracks']['items'][0]
-        track_id = track['id']
-        track_name = track['name']
-        artist_name = track['artists'][0]['name']
-        # Get the first artist's ID 
-        first_artist_id = track['artists'][0]['id'] 
+            track = results['tracks']['items'][0]
+            track_id = track['id']
+            track_name = track['name']
+            artist_name = track['artists'][0]['name']
+            # Get the first artist's ID 
+            first_artist_id = track['artists'][0]['id'] 
+                    
+            # Get audio features for the track
+            audio_data = sp.audio_features([track_id])[0]
+            song_id = track_id
+            track = sp.track(song_id)
+            popularity = float(track['popularity'])
+            
+
+            popularity_label = 1
+
+            if popularity >= 0 and popularity <= 10:
+                popularity_label = 1
+            elif popularity > 10 and popularity <= 20:
+                popularity_label = 2
+            elif popularity > 20 and popularity <= 30:
+                popularity_label = 3                
+            elif popularity > 30 and popularity <= 40:
+                popularity_label = 4 
+            elif popularity > 40 and popularity <= 50:
+                popularity_label = 5 
+            elif popularity > 50 and popularity <= 60:
+                popularity_label = 6
+            elif popularity > 60 and popularity <= 70:
+                popularity_label = 7 
+            elif popularity > 70 and popularity <= 80:
+                popularity_label = 8     
+            elif popularity > 80 and popularity <= 90:
+                popularity_label = 9 
+            else:
+                popularity_label = 10
+            #st.write("Popularity",popularity,"Label", popularity_label)    
                 
-        # Get audio features for the track
-        audio_features = sp.audio_features([track_id])[0]
-        song_id = track_id
-        track = sp.track(song_id)
-        popularity = track['popularity']
-        #print(f"Popularity: {popularity}")
+            
+            # Get the genres of the first artist 
+            first_artist_data = sp.artist(first_artist_id) 
+            genres = first_artist_data['genres'][0] if first_artist_data['genres'] else ''
+            
+            #print ( track_name, artist_name, audio_data, genres, popularity)
+    
+            audio_data['mode_and_key'] = str(audio_data['mode']) + "-" + str(audio_data['key'])
+            audio_data['artist'] = artist_name.lower()
+            audio_data['track_genre'] = genres.lower()
+            audio_data['explicit'] = 0
+            audio_data['popularity_label'] = popularity_label
+    
+            audio_data = OrderedDict([
+                ('track_genre', audio_data['track_genre']),
+                ('artists',artist_name),
+                ('time_signature', audio_data['time_signature']),
+                ('mode', audio_data['mode']),
+                ('mode_and_key', audio_data['mode_and_key']),
+                ('duration_ms', audio_data['duration_ms']),
+                ('danceability', audio_data['danceability']),
+                ('energy', audio_data['energy']),
+                ('loudness', audio_data['loudness']),
+                ('speechiness', audio_data['speechiness']),
+                ('acousticness', audio_data['acousticness']),
+                ('instrumentalness', audio_data['instrumentalness']),
+                ('liveness', audio_data['liveness']),
+                ('valence', audio_data['valence']),
+                ('tempo', audio_data['tempo']),
+                ('explicit', audio_data['explicit']),
+                ('popularity_label', audio_data['popularity_label'])
+                ])
+            
+            # Separate the target and feature variables
+            df_song = pd.DataFrame([audio_data])
+            st.markdown("#### Song details from Spotify")
+            st.write(df_song)
+            X_sample = df_song[all_features ]
+            X_encoded_sample = target_encoder.transform(X_sample)
+            X_encoded_sample[numerical_features] = scaler.transform(X_encoded_sample[numerical_features])
 
-        
-        # Get the genres of the first artist 
-        first_artist_data = sp.artist(first_artist_id) 
-        genres = first_artist_data['genres'][0] if first_artist_data['genres'] else ''
-        
-        return track_name, artist_name, audio_features, genres, popularity
-    else:
-        return None, None, None, None, None
+            X_encoded_sample_weighted = X_encoded_sample.copy()
+            X_encoded_sample_weighted.pop('mode')
+            
+            st.markdown("#### Encoded Song details from Spotify")
+            st.write(X_encoded_sample_weighted)
+            #X_resampled_weighted.head()
+            for k,v in feature_importances_normalized.items():
+                #print(k,v)
+                X_encoded_sample_weighted[k] = X_encoded_sample_weighted[k]*feature_importances_normalized[k]    
+            
+            sample_cluster = weighted_kmeans_model.predict(X_encoded_sample_weighted)
+            #X_merged = X_encoded_weighted.copy()
+            X_encoded_sample_weighted['clusterid'] = pd.Series(sample_cluster)
+            X_encoded_sample_weighted['popularity_label'] = popularity_label
+            return X_encoded_sample_weighted
 
+def getSimilarSongs2(df, df_joined,source_row, maxcnt):
+    from scipy.spatial.distance import cosine
+    #80022 is for Kishore Kumar
+    #source_row = df.iloc[80022]
+    #source_row = df.iloc[iloc]
+    source_row = source_row.iloc[0]
+    #print('source_row',source_row)
+    #cluster = source_row['clusterid'].astype(int)
+    cluster = int(source_row['clusterid'])
+    #popularity = source_row['popularity_label'].astype(int)
+    popularity = int(source_row['popularity_label'])
+    st.write('cluster=',cluster,'popularity=',popularity)
+    
+    df2 = df.query("clusterid == @cluster and popularity_label == @popularity").copy()
 
+    cosine_similarities = []
+    for i in range(len(df2)):
+        #print('xxxx',df2.iloc[i])
+        d1= {}
+        d1['index']=i
+        d1['similarity']=1 - cosine(df2.iloc[i], source_row)
+        cosine_similarities.append(d1)
 
-# Call the function and display the values
-#song_features = get_song_features()
-#st.write(song_features)
-
+    #sorted(cosine_similarities.items(), key=lambda x: x[1], reverse=True)
+    cosine_similarities = sorted(cosine_similarities, key=lambda d: d['similarity'], reverse=True)
+    cosine_similarities = cosine_similarities[0:maxcnt]
+    r = df_joined.query("clusterid == @cluster and popularity_label == @popularity ")
+    locations = [item['index'] for item in cosine_similarities]
+    #print('locations',locations, r.shape)
+    return r.iloc[locations][['track_genre','artists','album_name','clusterid','popularity_label']]
+    #return r.iloc[locations]
+    #return cosine_similarities[0:maxcnt]
+#==================================================================#
 
 # Streamlit app
-st.title("Spotify Song Audio Features")
+st.title("Song Recommendation Engine")
 
-option = st.radio(
-    "How would you like get Song details ?", 
-    ('Retrieve from Spotify', 'Experiment by enter it your own values')
-    )
+option = 'Retrieve from Spotify'
+#option = st.radio(
+#    "How would you like get Song details ?", 
+#    ('Retrieve from Spotify', 'Experiment by enter it your own values')
+#    )
 
-if (option == 'Experiment by enter it your own values'):
-    # Enter song details
-    track_name, artist_name, audio_features, genres  = get_song_features()
-    song_name = 'Custom'
-    st.write(audio_features)
+#if (option == 'Experiment by enter it your own values'):
+#    # Enter song details
+#    track_name, artist_name, audio_features, genres  = get_song_features()
+#    song_name = 'Custom'
+#    st.write(audio_features)
     
 if (option == 'Retrieve from Spotify'):
     # Get song name
@@ -164,281 +208,65 @@ if (option == 'Retrieve from Spotify'):
     if song_name:
         sp = authenticate_spotify()  # Authenticate Spotify API
         
+        #read data
+        df = pd.read_csv("dataset-hugging-face.csv")
+        df['artists'].fillna('', inplace=True)
+
+        # Define the mapping
+        key_mapping = {0: "C", 1: "C#", 2: "D", 3: "D#", 4: "E", 5: "F", 6: "F#", 7: "G", 8: "G#", 9: "A", 10: "A#", 11: "B"}
+        #df['key'] = pd.Categorical(df['key'], categories=["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"], ordered=True)
+        df['mode_and_key'] = str(df['mode']) + "-" + str(df['key'])
+        # Apply the mapping to create 'key_factor'
+        df['key'] = df['key'].map(key_mapping)
+        
+        # Determine popularity level 
+        df.loc[((df.popularity >= 0) & (df.popularity <= 35)), "popularity_level" ] = 1
+        df.loc[((df.popularity > 35) & (df.popularity <= 70)), "popularity_level" ] = 2
+        df.loc[((df.popularity > 70) & (df.popularity <= 100)), "popularity_level" ] = 3
+        
+        
+        # Features for targeted embeddings
+        categorical_features = ['track_genre', 'time_signature', 'mode', 'artists', 'mode_and_key']
+
+        numerical_features = ['duration_ms', 'danceability', 'energy', 'loudness', 'speechiness', 
+                              'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo', 'explicit']
+        #                      
+        # Combine categorical and numerical features
+        all_features = categorical_features + numerical_features
+        #
+        # Separate the target and feature variables
+        X = df[all_features]
+        y = df['popularity_level']
+        
+        # Initialize TargetEncoder for categorical features
+        target_encoder = TargetEncoder(cols=categorical_features)
+        
+        # Fit the encoder and transform the categorical features
+        X_encoded = target_encoder.fit_transform(X, y)
+        
+        # Standardize the numerical features (optional, for scaling the features)
+        scaler = StandardScaler()
+        X_encoded[numerical_features] = scaler.fit_transform(X_encoded[numerical_features])
+        
+        rf_model_loaded=loadModel('RandomForestClassifier')
+        # Get Feature Importances
+        #feature_importances = rf_model_loaded.feature_importances_
+        feature_names = rf_model_loaded.feature_names_in_
+        #st.write(feature_names)
+        feature_importances = pd.Series(rf_model_loaded.feature_importances_, index=feature_names).sort_values(ascending=False)
+        #st.write(feature_importances)
+        feature_importances_normalized = feature_importances/feature_importances['time_signature']
+        weighted_kmeans_model = loadModel('kmeans-model')
+    
         # Get song details and audio features
-        track_name, artist_name, audio_features, genres, spotify_popularity = get_audio_features (sp, song_name)
+        spotify_track = build_df_from_spotify(sp, song_name, all_features, numerical_features,target_encoder, scaler, feature_importances_normalized, weighted_kmeans_model)
         
-        if audio_features:
-            st.subheader(f"Song: {track_name} by {artist_name}")
-            st.write("Artist Name:" + artist_name)
-            st.write("Genres :" + genres)
-            st.write("Spotify Popularity :" + str(spotify_popularity))
-            #st.write("Audio Features:")
-            #st.json(audio_features)
-        else:
-            st.error("No song found. Please try again with a different song name.")
-
-if song_name:
-    #read data
-    df = pd.read_csv("dataset-hugging-face.csv")
-    df['artists'].fillna('', inplace=True)
-
-    # Define the mapping
-    key_mapping = {0: "C", 1: "C#", 2: "D", 3: "D#", 4: "E", 5: "F", 6: "F#", 7: "G", 8: "G#", 9: "A", 10: "A#", 11: "B"}
-    #df['key'] = pd.Categorical(df['key'], categories=["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"], ordered=True)
-    df['mode_and_key'] = str(df['mode']) + "-" + str(df['key'])
-    # Apply the mapping to create 'key_factor'
-    df['key'] = df['key'].map(key_mapping)
-    
-    # Determine popularity level 
-    df.loc[((df.popularity >= 0) & (df.popularity <= 35)), "popularity_level" ] = 1
-    df.loc[((df.popularity > 35) & (df.popularity <= 70)), "popularity_level" ] = 2
-    df.loc[((df.popularity > 70) & (df.popularity <= 100)), "popularity_level" ] = 3
-    
-    
-    # Features for targeted embeddings
-    categorical_features = ['track_genre', 'time_signature', 'mode', 'artists', 'mode_and_key']
-
-    numerical_features = ['duration_ms', 'danceability', 'energy', 'loudness', 'speechiness', 
-                          'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo', 'explicit']
-    #                      
-    # Combine categorical and numerical features
-    all_features = categorical_features + numerical_features
-    #
-    # Separate the target and feature variables
-    X = df[all_features]
-    y = df['popularity_level']
-    
-    # Initialize TargetEncoder for categorical features
-    target_encoder = TargetEncoder(cols=categorical_features)
-    
-    # Fit the encoder and transform the categorical features
-    X_encoded = target_encoder.fit_transform(X, y)
-    
-    # Standardize the numerical features (optional, for scaling the features)
-    scaler = StandardScaler()
-    X_encoded[numerical_features] = scaler.fit_transform(X_encoded[numerical_features])
-
-
-
-    #with open('./BaggingClassifier.pckl', 'rb') as file: 
-    #    model = pickle.load(file)
-    
-    #st.write(audio_features)
-    #st.write(pp.pprint(audio_features))
-    audio_data = audio_features
-    audio_data['mode_and_key'] = str(audio_data['mode']) + "-" + str(audio_data['key'])
-    audio_data['artist'] = artist_name
-    audio_data['track_genre'] = genres
-    audio_data['explicit'] = 0
-    # Drop specified keys 
-    keys_to_drop = ['type', 'id', 'uri', 'track_href', 'analysis_url','key'] 
-    for key in keys_to_drop: 
-        audio_data.pop(key, None)
+        df = pd.read_csv('X_merged.csv.gzip',compression='gzip')
+        df_joined = pd.read_csv('X_joined.csv.gzip',compression='gzip')
         
-    audio_data = OrderedDict([
-    ('track_genre', audio_data['track_genre']),
-    ('artists',artist_name),
-    ('time_signature', audio_data['time_signature']),
-    ('mode', audio_data['mode']),
-    ('mode_and_key', audio_data['mode_and_key']),
-    ('duration_ms', audio_data['duration_ms']),
-    ('danceability', audio_data['danceability']),
-    ('energy', audio_data['energy']),
-    ('loudness', audio_data['loudness']),
-    ('speechiness', audio_data['speechiness']),
-    ('acousticness', audio_data['acousticness']),
-    ('instrumentalness', audio_data['instrumentalness']),
-    ('liveness', audio_data['liveness']),
-    ('valence', audio_data['valence']),
-    ('tempo', audio_data['tempo']),
-    ('explicit', audio_data['explicit'])
-    ])
+        result = getSimilarSongs2(df, df_joined,spotify_track, maxcnt =10)
+        #df.iloc[[102587]]
         
-    #audio_data =  list(audio_data.values())
-    # Separate the target and feature variables
-    #X = audio_data[all_features]
-    #y = audio_data['popularity_level']
-
-    #--->st.write(audio_data)
-    
-    # Separate the target and feature variables
-    audio_data_df = pd.DataFrame([audio_data])
-    st.write('Audio features:') #('Audi Data converted to a data frame format')
-    st.write(audio_data_df.head())
-    X_sample = audio_data_df[all_features]
-    
-    X_encoded_sample = target_encoder.transform(X_sample)
-    X_encoded_sample[numerical_features] = scaler.transform(X_encoded_sample[numerical_features])
-    st.write('Audio features after encoding')
-    st.write(X_encoded_sample)
-    
-    rf_model_loaded=loadModel('RandomForestClassifier1500_10') #('RandomForestClassifier500OOB') #("RandomForestClassifier")
-    # Print the model's parameters
-    #st.write("Model Parameters:")
-    #st.write(rf_model_loaded.get_params())
-
-    # Print the feature importances
-    #st.write("\nFeature Importances:")
-    #st.write(rf_model_loaded.feature_importances_)
-    
-    # Drop the 'mode' column 
-    X_encoded_sample = X_encoded_sample.drop('mode', axis=1)
-    #rf_model_loaded.predict(X_encoded_sample)
-    pred_popularity = rf_model_loaded.predict(X_encoded_sample)[0,]
-    if pred_popularity == 1.0:
-        predicted_popularity = 'Low'
-        color = 'red'
-    elif pred_popularity == 2.0:
-        predicted_popularity = 'Medium'
-        color = 'medium'
-    else:
-        predicted_popularity = 'High'
-        color = 'green'
-    
-    #Predict Probability of each class.
-    pred_prob = rf_model_loaded.predict_proba(X_encoded_sample)[0,]
+        st.markdown("#### Song recommendations based on your song selection.")
+        st.write(result)
         
-    st.write('Song Popularity prediction: ' + predicted_popularity)
-    st.write(' ')
-    st.write('Probability the song Popularity to be.')
-    st.write('Low    :' + str(round(pred_prob[0,] * 100, 2)) + '%')
-    st.write('Medium :' + str(round(pred_prob[1,] * 100, 2)) + '%')
-    st.write('High   :' + str(round(pred_prob[2,] * 100, 2)) + '%')
-    
-    # Create the gauge
-    level = predicted_popularity
-    value = pred_popularity
-    fig = go.Figure(go.Indicator(
-    mode="gauge+number",
-    value=value,
-    #title={'text': f'Popularity: {level}'},
-    gauge={'axis': {'range': [0, 3], 'tickvals': [1, 2, 3], 'ticktext': ["Low", "Medium", "High"]},
-           'bar': {'color': "lightblue"},
-           'steps': [
-               {'range': [0, 1], 'color': "white"},
-               {'range': [1, 2], 'color': "white"},
-               {'range': [2, 3], 'color': "white"}],
-           'threshold': {
-                   'line': {'color': "black", 'width': 3},
-                   'thickness': 0.50,
-                   'value': value}})) 
-    
-    fig.update_layout(
-    title=dict(
-        text = f'Popularity: {level}',
-        x=0.5,  # X position (0 = left, 1 = right, 0.5 = center)
-        y=0.5, # Y position (0 = bottom, 1 = top)
-        xanchor='center',  # Horizontal alignment
-        yanchor='top',  # Vertical alignment
-        font=dict(
-            family="Arial", 
-            size=16,  # Font size
-            color="black"
-            )
-        )
-    )
-    # Render the gauge in Streamlit
-    st.plotly_chart(fig)
-    
-    #st.write(rf_model_loaded.predict(X_encoded_sample))
-    
-    estimators = rf_model_loaded.estimators_
-    tree_predictions = np.array([tree.predict(X_encoded_sample)+1 for tree in estimators])
-    tree_predictions_flat = tree_predictions.flatten()
-    #st.write(tree_predictions)
-    #st.write(tree_predictions_flat)
-    
-    # Create the histogram
-    #plt.hist(tree_predictions_flat, bins=3, edgecolor='k', alpha=0.7)
-    #plt.xticks([1, 2, 3])
-    #plt.xlabel('Predicted Values')
-    #plt.ylabel('Frequency')
-    #plt.title('Histogram of Predictions from All Trees in the RandomForest')
-    #st.pyplot(plt)
-    
-    # Create the histogram
-    plt.figure(figsize=(10, 6))
-    sns.histplot(tree_predictions_flat, bins=3, kde=True)
-    plt.xticks([1, 2, 3])
-    plt.title(f'Histogram of Predictions from All Trees in the RandomForest')
-    plt.xlabel('Predicted Popularity')
-    plt.ylabel('Frequency')
-    st.pyplot(plt)
-    
-    # Get Feature Importances
-    feature_importances = rf_model_loaded.feature_importances_
-    #st.write(feature_importances)
-    # Get model parameters
-    feature_names = rf_model_loaded.feature_names_in_
-    #st.write(feature_names)
-
-    
-    # Display Feature Importances
-    # Create a DataFrame for feature importances
-    feature_importance_df = pd.DataFrame({
-        'Feature': feature_names,
-        'Importance': feature_importances *100
-    })
-    # Plot feature importances
-    fig = px.bar(feature_importance_df, 
-                    x='Importance', 
-                    y='Feature', 
-                    orientation='h', 
-                    title='Feature Importances (in %)')
-    st.plotly_chart(fig)
-    
-    # Create scatter plot using Plotly Express
-    # Map numeric predictions to labels
-    popularity_map = {1: 'Low', 2: 'Medium', 3: 'High'}
-    popularity_colors = {'Low': '#FF6961', 'Medium': '#FFD700', 'High': '#77DD77'}
-    # Convert tree predictions to a DataFrame for Plotly
-    df = pd.DataFrame({
-        'Tree Index': range(1, len(tree_predictions_flat) + 1),
-        'Prediction': tree_predictions_flat
-    })
-    df['Popularity'] = df['Prediction'].map(popularity_map)  # Map numeric predictions to labels
-
-    # Create scatter plot using Plotly Express
-    fig = px.scatter(
-        df,
-        x='Tree Index',
-        y='Popularity',
-        color='Popularity',
-        color_discrete_map=popularity_colors,
-        title="Decision Outputs of Each Tree in the Random Forest",
-        labels={"Tree Index": "Tree Index", "Popularity": "Predicted Popularity"}
-    )
-
-    # Update layout for a cleaner appearance
-    fig.update_layout(
-        xaxis_title="Tree Index",
-        yaxis_title="Predicted Popularity Level",
-        yaxis=dict(categoryorder="array", categoryarray=["Low", "Medium", "High"])
-    )
-
-    # Render in Streamlit
-    st.plotly_chart(fig)
-
-    # Get Out-of-Bag Score
-    #ob_score = rf_model_loaded.oob_score_
-
-    # Get Out-of-Bag Decision Function
-    #ob_decision_function = rf_model_loaded.oob_decision_function_
-
-    # Display Out-of-Bag Score
-    #st.write(f"Out-of-Bag Score: {oob_score}")
-
-    # Display Out-of-Bag Decision Function
-    #st.write("Out-of-Bag Decision Function:")
-    #st.write(oob_decision_function)
-    
-    #first_tree = rf_model_loaded.estimators_[0]
-    #st.write(first_tree)
-    
-    #from sklearn.tree import plot_tree
-    # Plot the first tree
-    #plt.figure(figsize=(20, 10))
-    #plot_tree(first_tree, filled=True, feature_names=feature_names, class_names=['Class0', 'Class1','Class2'])
-    #plt.title("First Tree in the RandomForestClassifier")
-    #plt.show()
-    #st.pyplot(plt)
