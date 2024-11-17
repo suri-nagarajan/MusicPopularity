@@ -163,12 +163,17 @@ option = st.radio(
 
 if (option == 'Experiment by entering your own values'):
     # Enter song details
+    st.markdown("#### Enter Artist name and Genre and select audio features for your song usng the controls here")
+    st.markdown("##### Artist name and Genre are optional, you can leavle them empty if you are exprimenting with features.")
+    
     track_name, artist_name, audio_features, genres  = get_song_features()
     song_name = 'Custom'
     st.write(audio_features)
     
 if (option == 'Retrieve from Spotify'):
     # Get song name
+    st.markdown("#### Enter a song name here (e.g. Hotel California or Tauba Tauba or any song of your choice)")
+    st.markdown("#### and hit enter to fetch the song from spotify in realtime and process the song")
     song_name = st.text_input("Enter a song name:")
 
     if song_name:
