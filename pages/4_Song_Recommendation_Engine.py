@@ -253,6 +253,7 @@ if (option == 'Retrieve from Spotify'):
         scaler = StandardScaler()
         X_encoded[numerical_features] = scaler.fit_transform(X_encoded[numerical_features])
         
+        @st.cache_data
         rf_model_loaded=loadModel('RandomForestClassifier','Y')
         # Get Feature Importances
         #feature_importances = rf_model_loaded.feature_importances_
@@ -261,12 +262,16 @@ if (option == 'Retrieve from Spotify'):
         feature_importances = pd.Series(rf_model_loaded.feature_importances_, index=feature_names).sort_values(ascending=False)
         #st.write(feature_importances)
         feature_importances_normalized = feature_importances/feature_importances['time_signature']
+        
+        @st.cache_data
         weighted_kmeans_model = loadModel('kmeans-model','N')
     
         # Get song details and audio features
         spotify_track = build_df_from_spotify(sp, song_name, all_features, numerical_features,target_encoder, scaler, feature_importances_normalized, weighted_kmeans_model)
         
+        @st.cache_data
         df = pd.read_csv('X_merged.csv.gzip',compression='gzip')
+        @st.cache_data
         df_joined = pd.read_csv('X_joined.csv.gzip',compression='gzip')
         
         result = getSimilarSongs2(df, df_joined,spotify_track, maxcnt =10)
