@@ -259,7 +259,8 @@ if (option == 'Retrieve from Spotify'):
         scaler = StandardScaler()
         X_encoded[numerical_features] = scaler.fit_transform(X_encoded[numerical_features])
         
-        rf_model_loaded=loadModel('RandomForestClassifier','Y')
+        #rf_model_loaded=loadModel('RandomForestClassifier','Y')
+        rf_model_loaded=loadModel('rfModel-10-level','Y')
         # Get Feature Importances
         #feature_importances = rf_model_loaded.feature_importances_
         feature_names = rf_model_loaded.feature_names_in_
