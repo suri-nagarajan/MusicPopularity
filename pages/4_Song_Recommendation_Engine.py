@@ -253,7 +253,6 @@ if (option == 'Retrieve from Spotify'):
         scaler = StandardScaler()
         X_encoded[numerical_features] = scaler.fit_transform(X_encoded[numerical_features])
         
-        @st.cache_data
         rf_model_loaded=loadModel('RandomForestClassifier','Y')
         # Get Feature Importances
         #feature_importances = rf_model_loaded.feature_importances_
@@ -263,7 +262,6 @@ if (option == 'Retrieve from Spotify'):
         #st.write(feature_importances)
         feature_importances_normalized = feature_importances/feature_importances['time_signature']
         
-        @st.cache_data
         weighted_kmeans_model = loadModel('kmeans-model','N')
     
         # Get song details and audio features
