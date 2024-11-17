@@ -213,6 +213,7 @@ option = 'Retrieve from Spotify'
     
 if (option == 'Retrieve from Spotify'):
     # Get song name
+    st.markdown("#### Enter a song name here (e.g. Hotel California or Tauba Tauba or any song of your choice) and hit enter to fetch the song from spotify in realtime and process the song")
     song_name = st.text_input("Enter a song name:")
 
     if song_name:
