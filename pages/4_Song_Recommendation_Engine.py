@@ -199,6 +199,8 @@ def getSimilarSongs2(df, df_joined,source_row, maxcnt):
 # Streamlit app
 st.title("Song Recommendation Engine")
 
+st.markdown("#### This song recommendation engine fetches audio features of the song of your choice from Spotify in realtime and uses K-Means clustering to build recommendations based on the cluster that best matches the song of your choice.")
+
 option = 'Retrieve from Spotify'
 #option = st.radio(
 #    "How would you like get Song details ?", 
