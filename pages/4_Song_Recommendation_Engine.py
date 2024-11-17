@@ -38,13 +38,17 @@ def authenticate_spotify():
     sp = spotipy.Spotify(auth_manager=auth_manager)
     return sp
 
-def loadModel(modelName):
+def loadModel(modelName,compressed = 'Y'):
     # Load all fragments
     #model = RandomForestClassifier()
     #st.write(modelName)
     #with gzip.open(modelName + '.pckl.gz', 'rb') as f:
-    with open(modelName + '.pckl', 'rb') as f:
-        model = pickle.load(f)
+    if (compressed == 'Y' or compressed == 'y'):
+        with gzip.open(modelName + '.pckl.gz', 'rb') as f:
+            model = pickle.load(f)
+    else:
+        with open(modelName + '.pckl', 'rb') as f:
+            model = pickle.load(f)
     return model
 
 #=================================================================#
@@ -248,7 +252,7 @@ if (option == 'Retrieve from Spotify'):
         scaler = StandardScaler()
         X_encoded[numerical_features] = scaler.fit_transform(X_encoded[numerical_features])
         
-        rf_model_loaded=loadModel('RandomForestClassifier')
+        rf_model_loaded=loadModel('RandomForestClassifier','Y')
         # Get Feature Importances
         #feature_importances = rf_model_loaded.feature_importances_
         feature_names = rf_model_loaded.feature_names_in_
@@ -256,7 +260,7 @@ if (option == 'Retrieve from Spotify'):
         feature_importances = pd.Series(rf_model_loaded.feature_importances_, index=feature_names).sort_values(ascending=False)
         #st.write(feature_importances)
         feature_importances_normalized = feature_importances/feature_importances['time_signature']
-        weighted_kmeans_model = loadModel('kmeans-model')
+        weighted_kmeans_model = loadModel('kmeans-model','N')
     
         # Get song details and audio features
         spotify_track = build_df_from_spotify(sp, song_name, all_features, numerical_features,target_encoder, scaler, feature_importances_normalized, weighted_kmeans_model)
