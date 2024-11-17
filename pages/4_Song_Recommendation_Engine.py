@@ -167,6 +167,7 @@ def getSimilarSongs2(df, df_joined,source_row, maxcnt):
     cluster = int(source_row['clusterid'])
     #popularity = source_row['popularity_label'].astype(int)
     popularity = int(source_row['popularity_label'])
+    st.markdown("#### Song recommendation K-Means cluster search reault")
     st.write('cluster=',cluster,'popularity=',popularity)
     
     df2 = df.query("clusterid == @cluster and popularity_label == @popularity").copy()
