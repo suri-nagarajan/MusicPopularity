@@ -52,6 +52,11 @@ def loadModel(modelName,compressed = 'Y'):
     return model
 
 #=================================================================#
+@st.cache_data
+def read_compressed_csv(csv_file):
+     csv_data = pd.read_csv(csv_file,compression='gzip')
+     return csv_data
+     
 def build_df_from_spotify(sp_conn, song_name, all_features, numerical_features,target_encoder, scaler, feature_importances_normalized, weighted_kmeans_model):
 
     from collections import OrderedDict
@@ -267,10 +272,11 @@ if (option == 'Retrieve from Spotify'):
         # Get song details and audio features
         spotify_track = build_df_from_spotify(sp, song_name, all_features, numerical_features,target_encoder, scaler, feature_importances_normalized, weighted_kmeans_model)
         
-        #@st.cache_data
-        df = pd.read_csv('X_merged.csv.gzip',compression='gzip')
-        #@st.cache_data
-        df_joined = pd.read_csv('X_joined.csv.gzip',compression='gzip')
+        #df = pd.read_csv('X_merged.csv.gzip',compression='gzip')
+        df = read_compressed_csv('X_merged.csv.gzip')
+        
+        #df_joined = pd.read_csv('X_joined.csv.gzip',compression='gzip')
+        df_joined = read_compressed_csv('X_joined.csv.gzip')
         
         result = getSimilarSongs2(df, df_joined,spotify_track, maxcnt =10)
         #df.iloc[[102587]]
