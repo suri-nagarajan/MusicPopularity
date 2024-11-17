@@ -267,9 +267,9 @@ if (option == 'Retrieve from Spotify'):
         # Get song details and audio features
         spotify_track = build_df_from_spotify(sp, song_name, all_features, numerical_features,target_encoder, scaler, feature_importances_normalized, weighted_kmeans_model)
         
-        @st.cache_data
+        #@st.cache_data
         df = pd.read_csv('X_merged.csv.gzip',compression='gzip')
-        @st.cache_data
+        #@st.cache_data
         df_joined = pd.read_csv('X_joined.csv.gzip',compression='gzip')
         
         result = getSimilarSongs2(df, df_joined,spotify_track, maxcnt =10)
